@@ -2,8 +2,6 @@ package main
 
 import "fmt"
 
-type board []byte
-
 const (
 	separator = "---+---+---\n"
 	prompt    = "\n> "
@@ -23,33 +21,11 @@ const (
 )
 
 type ttt struct {
-	message   string
-	data      []byte
-	represent string
-	item      byte
-	place     int
-	turn      int
-}
-
-func main() {
-	t := ttt{
-		data:  []byte{'1', '2', '3', '4', '5', '6', '7', '8', '9'},
-		place: 1,
-	}
-	t.Draw()
-
-	for t.turn < 9 {
-		if t.isWin() {
-			t.Draw()
-			break
-		}
-		success := t.makeTurn()
-		if success {
-			t.turn += 1
-			t.message = ""
-		}
-		t.Draw()
-	}
+	board   []byte
+	message string
+	item    byte
+	place   int
+	turn    int
 }
 
 func paint(ch byte) string {
@@ -68,27 +44,27 @@ func paint(ch byte) string {
 }
 
 func (t *ttt) isWin() bool {
-	if t.data[0] == t.data[4] && t.data[4] == t.data[8] {
-		t.data[0] = '\\'
-		t.data[4] = '\\'
-		t.data[8] = '\\'
+	if t.board[0] == t.board[4] && t.board[4] == t.board[8] {
+		t.board[0] = '\\'
+		t.board[4] = '\\'
+		t.board[8] = '\\'
 		return true
-	} else if t.data[2] == t.data[4] && t.data[4] == t.data[6] {
-		t.data[2] = '/'
-		t.data[4] = '/'
-		t.data[6] = '/'
+	} else if t.board[2] == t.board[4] && t.board[4] == t.board[6] {
+		t.board[2] = '/'
+		t.board[4] = '/'
+		t.board[6] = '/'
 		return true
 	}
 	for i := range 3 {
-		if t.data[i*3] == t.data[i*3+1] && t.data[i*3+1] == t.data[i*3+2] {
-			t.data[i*3] = '-'
-			t.data[i*3+1] = '-'
-			t.data[i*3+2] = '-'
+		if t.board[i*3] == t.board[i*3+1] && t.board[i*3+1] == t.board[i*3+2] {
+			t.board[i*3] = '-'
+			t.board[i*3+1] = '-'
+			t.board[i*3+2] = '-'
 			return true
-		} else if t.data[i] == t.data[i+1*3] && t.data[i+1*3] == t.data[i+2*3] {
-			t.data[i] = '|'
-			t.data[i+1*3] = '|'
-			t.data[i+2*3] = '|'
+		} else if t.board[i] == t.board[i+1*3] && t.board[i+1*3] == t.board[i+2*3] {
+			t.board[i] = '|'
+			t.board[i+1*3] = '|'
+			t.board[i+2*3] = '|'
 			return true
 		}
 	}
@@ -98,7 +74,6 @@ func (t *ttt) isWin() bool {
 func (t *ttt) makeTurn() bool {
 	_, err := fmt.Scan(&t.place)
 	if err != nil || t.place > 9 || t.place < 1 {
-		//panic(fmt.Sprintf("I just gonna break the game, coz im too lazy to handle an error. And yeah, here is an error: %s", err))
 		t.message = "type 1-9, not this noncense"
 		return false
 	}
@@ -108,25 +83,46 @@ func (t *ttt) makeTurn() bool {
 	case false:
 		t.item = zero
 	}
-	if t.data[t.place-1] == 'x' || t.data[t.place-1] == 'o' {
+	if t.board[t.place-1] == 'x' || t.board[t.place-1] == 'o' {
 		t.message = "this place is taken, choose another one"
 		return false
 	} else {
-		t.data[t.place-1] = t.item
+		t.board[t.place-1] = t.item
 	}
 	return true
 }
 
 func (t *ttt) Draw() {
 	fmt.Print(clearView, clearHistory, moveToStart)
-	t.represent = red + t.message + reset + "\n"
+	represent := red + t.message + reset + "\n"
 
 	for i := range 3 {
-		t.represent += fmt.Sprintf(" %s | %s | %s \n", paint(t.data[3*i]), paint(t.data[3*i+1]), paint(t.data[3*i+2]))
+		represent += fmt.Sprintf(" %s | %s | %s \n", paint(t.board[3*i]), paint(t.board[3*i+1]), paint(t.board[3*i+2]))
 		if i != 2 {
-			t.represent += fmt.Sprint(separator)
+			represent += fmt.Sprint(separator)
 		}
 	}
-	t.represent += fmt.Sprint(prompt)
-	fmt.Print(t.represent)
+	represent += fmt.Sprint(prompt)
+	fmt.Print(represent)
+}
+
+func main() {
+	t := ttt{
+		board: []byte{'1', '2', '3', '4', '5', '6', '7', '8', '9'},
+		place: 1,
+	}
+	t.Draw()
+
+	for t.turn < 9 {
+		if t.isWin() {
+			t.Draw()
+			break
+		}
+		success := t.makeTurn()
+		if success {
+			t.turn += 1
+			t.message = ""
+		}
+		t.Draw()
+	}
 }
