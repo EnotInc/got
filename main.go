@@ -18,10 +18,12 @@ const (
 	red    = "\033[31m"
 	yellow = "\033[33m"
 	blue   = "\033[34m"
+	purple = "\033[35m"
 	gray   = "\033[90m"
 )
 
 type ttt struct {
+	message   string
 	data      []byte
 	represent string
 	item      byte
@@ -34,23 +36,27 @@ func main() {
 		data:  []byte{'1', '2', '3', '4', '5', '6', '7', '8', '9'},
 		place: 1,
 	}
-	t.render()
+	t.Draw()
 
-	for t.turn = range 9 {
+	for t.turn < 9 {
 		if t.isWin() {
-			t.render()
+			t.Draw()
 			break
 		}
-		t.makeTurn()
-		t.render()
+		success := t.makeTurn()
+		if success {
+			t.turn += 1
+			t.message = ""
+		}
+		t.Draw()
 	}
 }
 
-func colorise(ch byte) string {
+func paint(ch byte) string {
 	var color = ""
 	switch ch {
 	case 'x':
-		color = red
+		color = purple
 	case 'o':
 		color = blue
 	case '\\', '/', '-', '|':
@@ -79,8 +85,8 @@ func (t *ttt) isWin() bool {
 			t.data[i*3+1] = '-'
 			t.data[i*3+2] = '-'
 			return true
-		} else if t.data[i*3] == t.data[i+1*3] && t.data[i+1*3] == t.data[i+2*3] {
-			t.data[i*3] = '|'
+		} else if t.data[i] == t.data[i+1*3] && t.data[i+1*3] == t.data[i+2*3] {
+			t.data[i] = '|'
 			t.data[i+1*3] = '|'
 			t.data[i+2*3] = '|'
 			return true
@@ -89,10 +95,12 @@ func (t *ttt) isWin() bool {
 	return false
 }
 
-func (t *ttt) makeTurn() {
+func (t *ttt) makeTurn() bool {
 	_, err := fmt.Scan(&t.place)
-	if err != nil {
-		panic(fmt.Sprintf("I just gonna break the game, coz im too lazy to handle an error. And yeah, here is an error: %s", err))
+	if err != nil || t.place > 9 || t.place < 1 {
+		//panic(fmt.Sprintf("I just gonna break the game, coz im too lazy to handle an error. And yeah, here is an error: %s", err))
+		t.message = "type 1-9, not this noncense"
+		return false
 	}
 	switch t.turn%2 == 0 {
 	case true:
@@ -100,16 +108,21 @@ func (t *ttt) makeTurn() {
 	case false:
 		t.item = zero
 	}
-
-	t.data[t.place-1] = t.item
+	if t.data[t.place-1] == 'x' || t.data[t.place-1] == 'o' {
+		t.message = "this place is taken, choose another one"
+		return false
+	} else {
+		t.data[t.place-1] = t.item
+	}
+	return true
 }
 
-func (t *ttt) render() {
+func (t *ttt) Draw() {
 	fmt.Print(clearView, clearHistory, moveToStart)
-	t.represent = ""
+	t.represent = red + t.message + reset + "\n"
 
 	for i := range 3 {
-		t.represent += fmt.Sprintf(" %s | %s | %s \n", colorise(t.data[3*i]), colorise(t.data[3*i+1]), colorise(t.data[3*i+2]))
+		t.represent += fmt.Sprintf(" %s | %s | %s \n", paint(t.data[3*i]), paint(t.data[3*i+1]), paint(t.data[3*i+2]))
 		if i != 2 {
 			t.represent += fmt.Sprint(separator)
 		}
